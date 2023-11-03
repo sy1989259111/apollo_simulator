@@ -213,13 +213,13 @@ Status LatController::Init(std::shared_ptr<DependencyInjector> injector,
   matrix_a_(0, 1) = 1.0;
   matrix_a_(1, 2) = 0;
   matrix_a_(2, 3) = 1.0;
-  matrix_a_(3, 2) = (2*c_f*lf_-2*c_f*lr_)/iz_;
+  matrix_a_(3, 2) = (2.0*cf_*lf_-2.0*cf_*lr_)/iz_;
 
   matrix_a_coeff_ = Matrix::Zero(matrix_size, matrix_size);
-  matrix_a_coeff_(1, 1) = -1.0(2*c_f + 2*c_r) / m;
-  matrix_a_coeff_(1, 3) = -1.0(2*l_r * c_r - 2*l_f * c_f) / m;
-  matrix_a_coeff_(3, 1) = -1.0(2*lr * cr - 2*lf * cf) / i_z;
-  matrix_a_coeff_(3, 3) = -1.0 * (2*l_f^2 * c_f + 2*l_r^2 * c_r) / i_z;
+  matrix_a_coeff_(1, 1) = -1.0(2.0*cf_ + 2.0*cr_) / mass_;
+  matrix_a_coeff_(1, 3) = -1.0(2.0*lr_ * cr_ - 2.0*lf_ * cf_) / mass_;
+  matrix_a_coeff_(3, 1) = -1.0(2.0*lr_ * cr_ - 2.0*lf_ * cf_) / iz_;
+  matrix_a_coeff_(3, 3) = -1.0 * (2.0*lf_^2.0 * cf_ + 2.0*lr_^2.0 * cr_) / iz_;
 
   /*
   b = [0.0, c_f / m, 0.0, l_f * c_f / i_z]^T
@@ -482,13 +482,13 @@ Status LatController::ComputeControlCommand(
     matrix_q_updated_(2, 2) =
         matrix_q_(2, 2) * heading_err_interpolation_->Interpolate(
                               std::fabs(vehicle_state->linear_velocity()));
-    common::math::SolveLQRProblem(0910-question, 0910-question, 0910-question,
-                                  0910-question, 0910-question, 0910-question,
-                                  0910-question);
+    common::math::SolveLQRProblem(matrix_adc_, matrix_bdc_, matrix_q_,
+                                  matrix_r_, lqr_eps_, lqr_max_iteration_,
+                                 &matrix_k_);
   } else {
-    common::math::SolveLQRProblem(0910-question, 0910-question, 0910-question,
-                                  0910-question, 0910-question, 0910-question,
-                                  0910-question);
+    common::math::SolveLQRProblem(matrix_adc_, matrix_bdc_, matrix_q_,
+                                  matrix_r_, lqr_eps_, lqr_max_iteration_,
+                                  &matrix_k_);
   }
 
   // feedback = - K * state
@@ -519,7 +519,7 @@ Status LatController::ComputeControlCommand(
       }
     }
   }
-  steer_angle = 0910-question + 0910-question +
+  steer_angle = steer_angle_feedback + steer_angle_feedforward +
                 steer_angle_feedback_augment;
 
   // Compute the steering command limit with the given maximum lateral
@@ -743,7 +743,7 @@ void LatController::UpdateMatrixCompound() {
 
 double LatController::ComputeFeedForward(double ref_curvature) const {
   const double kv =
-      0910-question - 0910-question
+       0.5*lr_*mass_/cf_*(lf_+lr_)- 0.5*lf_*mass_/cr_*(lf_+lr_)
 
   // Calculate the feedforward term of the lateral controller; then change it
   // from rad to %
@@ -755,10 +755,10 @@ double LatController::ComputeFeedForward(double ref_curvature) const {
                                   steer_single_direction_max_degree_ * 100;
   } else {
     steer_angle_feedforwardterm =
-        (0910-question+ 0910-question -
-         0910-question*
-             (0910-question -
-              0910-question)) *
+        (wheelbase_*ref_curvature + kv*v^2.0*ref_curvature -
+         matrix_k_(0,2)*
+             (lr_*0.5/cf_ -
+              lf_*0.5*mass_*ref_curvature/(cr_*wheelbase_))) *
         180 / M_PI * steer_ratio_ / steer_single_direction_max_degree_ * 100;
   }
 
