@@ -211,15 +211,15 @@ Status LatController::Init(std::shared_ptr<DependencyInjector> injector,
    (-1.0 * (l_f^2 * c_f + l_r^2 * c_r) / i_z) / v;]
   */
   matrix_a_(0, 1) = 1.0;
-  matrix_a_(1, 2) = 0;
+  matrix_a_(1, 2) = (cf_ + cr_) / mass;
   matrix_a_(2, 3) = 1.0;
-  matrix_a_(3, 2) = (2.0*cf_*lf_-2.0*cf_*lr_)/iz_;
+  matrix_a_(3, 2) = (cf_*lf_-cr_*lr_)/iz_;
 
   matrix_a_coeff_ = Matrix::Zero(matrix_size, matrix_size);
-  matrix_a_coeff_(1, 1) = -1.0(2.0*cf_ + 2.0*cr_) / mass_;
-  matrix_a_coeff_(1, 3) = -1.0(2.0*lr_ * cr_ - 2.0*lf_ * cf_) / mass_;
-  matrix_a_coeff_(3, 1) = -1.0(2.0*lr_ * cr_ - 2.0*lf_ * cf_) / iz_;
-  matrix_a_coeff_(3, 3) = -1.0 * (2.0*lf_^2.0 * cf_ + 2.0*lr_^2.0 * cr_) / iz_;
+  matrix_a_coeff_(1, 1) = -1.0*(cf_ + cr_) / mass_;
+  matrix_a_coeff_(1, 3) = (lr_ * cr_ - lf_ * cf_) / mass_;
+  matrix_a_coeff_(3, 1) = (lr_ * cr_ - lf_ * cf_) / iz_;
+  matrix_a_coeff_(3, 3) = -1.0 * (lf_^2.0 * cf_ + lr_^2.0 * cr_) / iz_;
 
   /*
   b = [0.0, c_f / m, 0.0, l_f * c_f / i_z]^T
