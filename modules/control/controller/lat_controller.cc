@@ -484,7 +484,7 @@ Status LatController::ComputeControlCommand(
                               std::fabs(vehicle_state->linear_velocity()));
     common::math::SolveLQRProblem(matrix_adc_, matrix_bdc_, matrix_q_,
                                   matrix_r_, lqr_eps_, lqr_max_iteration_,
-                                 &matrix_k_);
+                                  &matrix_k_);
   } else {
     common::math::SolveLQRProblem(matrix_adc_, matrix_bdc_, matrix_q_,
                                   matrix_r_, lqr_eps_, lqr_max_iteration_,
@@ -743,7 +743,7 @@ void LatController::UpdateMatrixCompound() {
 
 double LatController::ComputeFeedForward(double ref_curvature) const {
   const double kv =
-       lr_*mass_/ 2.0 /cf_/ wheelbase - lf_ / mass_/ 2.0/ cr_ / wheelbase_ ;
+       lr_*mass_/ 2.0 / cf_ / wheelbase - lf_ / mass_/ 2.0/ cr_ / wheelbase_ ;
 
   // Calculate the feedforward term of the lateral controller; then change it
   // from rad to %
@@ -757,8 +757,8 @@ double LatController::ComputeFeedForward(double ref_curvature) const {
     steer_angle_feedforwardterm =
         (wheelbase_*ref_curvature + kv*v*v*ref_curvature -
          matrix_k_(0,2)*
-             (lr_*ref_curvature -
-              lf_*mass_*ref_curvature*v*v/2.0/cr_/wheelbase_)) *
+             (lr_ * ref_curvature -
+              lf_ * mass_ * ref_curvature * v * v / 2.0 / cr_ / wheelbase_)) *
         180 / M_PI * steer_ratio_ / steer_single_direction_max_degree_ * 100;
   }
 
